@@ -53,16 +53,21 @@ type NotesFile struct {
 
 // App struct
 type App struct {
-	ctx         context.Context
-	alwaysOnTop bool
+	ctx           context.Context
+	alwaysOnTop   bool
+	windowVisible bool
+	quitting      bool
 }
 
 func NewApp() *App {
-	return &App{alwaysOnTop: true}
+	return &App{alwaysOnTop: true, windowVisible: true}
 }
 
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	// Run the tray loop and global-hotkey listeners alongside the UI.
+	go a.startTray()
+	go a.startHotkeys()
 }
 
 // ---- Persistence (§13, error handling §17) ----
@@ -154,7 +159,5 @@ func (a *App) MinimizeWindow() {
 	runtime.WindowMinimise(a.ctx)
 }
 
-// Quit exits the application.
-func (a *App) Quit() {
-	runtime.Quit(a.ctx)
-}
+// Real exit lives in desktop.go as QuitApp (it sets the quitting flag so
+// beforeClose allows the window to close). The window's ✕ only hides to tray.

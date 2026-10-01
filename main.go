@@ -32,6 +32,7 @@ func main() {
 		},
 		BackgroundColour: &options.RGBA{R: 0, G: 0, B: 0, A: 0}, // fully transparent
 		OnStartup:        app.startup,
+		OnBeforeClose:    app.beforeClose, // ✕ hides to tray instead of quitting (§15)
 		Bind: []interface{}{
 			app,
 		},

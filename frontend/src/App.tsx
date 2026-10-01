@@ -3,7 +3,8 @@ import "./App.css";
 import { Note } from "./components/Note";
 import { useNotes } from "./hooks/useNotes";
 import { createNote } from "./types/note";
-import { TogglePin, MinimizeWindow, Quit } from "../wailsjs/go/main/App";
+import { TogglePin, MinimizeWindow, HideWindow } from "../wailsjs/go/main/App";
+import { EventsOn } from "../wailsjs/runtime/runtime";
 
 function App() {
     const { notes, loaded, addNote, updateNote, removeNote } = useNotes();
@@ -40,9 +41,8 @@ function App() {
         setPinned(await TogglePin());
     }
 
-    // Ctrl/Cmd+Shift+N — new note. NOTE: this only works while the board window
-    // is focused. A true global shortcut needs an OS hotkey lib (Wails v2 has
-    // none); see OD-3 / FR-012.
+    // In-window Ctrl/Cmd+Shift+N (works while the board is focused). The global
+    // version (works from any app) is Ctrl+Alt+N, registered in Go (desktop.go).
     useEffect(() => {
         function onKey(e: KeyboardEvent) {
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "n") {
@@ -54,6 +54,11 @@ function App() {
         return () => window.removeEventListener("keydown", onKey);
     }, [newNote]);
 
+    // The tray menu and the global hotkey create notes by emitting this event.
+    useEffect(() => {
+        return EventsOn("app:new-note", () => newNote());
+    }, [newNote]);
+
     const ordered = order
         .map((id) => notes.find((n) => n.id === id))
         .filter((n): n is NonNullable<typeof n> => Boolean(n));
@@ -63,7 +68,7 @@ function App() {
             {/* Title bar — the only OS-draggable region (Wails --wails-draggable). */}
             <div className="board__bar" style={{ "--wails-draggable": "drag" } as React.CSSProperties}>
                 <span className="board__title">📝 HoverNotes</span>
-                <button className="board__btn board__btn--accent" onClick={newNote} title="New note (Ctrl+Shift+N)">
+                <button className="board__btn board__btn--accent" onClick={newNote} title="New note (global: Ctrl+Alt+N)">
                     ＋ New
                 </button>
                 <span className="board__spacer" />
@@ -77,7 +82,11 @@ function App() {
                 <button className="board__btn" onClick={() => MinimizeWindow()} title="Minimize">
                     —
                 </button>
-                <button className="board__btn" onClick={() => Quit()} title="Quit">
+                <button
+                    className="board__btn"
+                    onClick={() => HideWindow()}
+                    title="Hide to tray (quit from the tray icon)"
+                >
                     ✕
                 </button>
             </div>

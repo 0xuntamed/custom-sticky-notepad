@@ -2,7 +2,11 @@ module hover-notes-spike
 
 go 1.25.0
 
-require github.com/wailsapp/wails/v2 v2.15.0
+require (
+	github.com/energye/systray v1.0.3
+	github.com/wailsapp/wails/v2 v2.15.0
+	golang.design/x/hotkey v0.6.4
+)
 
 require (
 	git.sr.ht/~jackmordaunt/go-toast/v2 v2.0.3 // indirect
